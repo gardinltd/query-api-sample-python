@@ -6,8 +6,8 @@ from typing import Dict, Tuple
 
 """
 Example code demonstrating how to:
-1. Authenticate with the Gardin API
-2. Submit and monitor a query 
+1. Authenticate with the Gardin Services API
+2. Submit and monitor a query via the Query service
 3. Download results to a CSV file
 
 Before running this code, you must:
@@ -25,13 +25,14 @@ To run the code:
    python3 gardin_api_query_simple_example.py
 """
 
-# Required: Add your Gardin API credentials here
+# Required: Add your Gardin Services API credentials here
 CLIENT_ID = '<YOUR_CLIENT_ID>'  # Replace with your client ID
 CLIENT_SECRET = '<YOUR_CLIENT_SECRET>'  # Replace with your client secret
 
 # Configuration constants
 QUERY_STATUS_POLLING_WAIT_SECS = 10
 CSV_DOWNLOAD_PATH_PREFIX = 'gardin_query_api_results_'  # Prefix for output files
+API_BASE_URL = 'https://api.gardin.ag/v2' # v2 is the latest and only-supported version at present.
 
 def check_api_response(response: requests.Response, action: str) -> None:
     """
@@ -71,14 +72,14 @@ def get_auth_token() -> str:
 
 def submit_query(token: str, headers: Dict) -> str:
     """
-    Submit a query to the Gardin API.
+    Submit a query to the Gardin Query Service.
     
     Args:
         token: Authentication token
     Returns:
         str: Query ID for tracking the query status
     """
-    query_url = "https://api.gardin.ag/v1/query"
+    query_url = f"{API_BASE_URL}/query"
 
     # Example query filter - 1 month of indices data
     query_payload = {
@@ -107,7 +108,7 @@ def monitor_query_status(query_id: str, headers: Dict) -> bool:
     Returns:
         bool: True if query completed successfully, False otherwise
     """
-    status_url = f"https://api.gardin.ag/v1/query/{query_id}/status/"
+    status_url = f"{API_BASE_URL}/query/{query_id}/status/"
     
     while True:
         response = requests.get(status_url, headers=headers)
@@ -140,7 +141,7 @@ def download_results(query_id: str, headers: Dict) -> str:
     Returns:
         str: Signed URI for downloading results
     """
-    download_url = f"https://api.gardin.ag/v1/query/{query_id}/result/download"
+    download_url = f"{API_BASE_URL}/query/{query_id}/result/download"
     response = requests.get(download_url, headers=headers)
     check_api_response(response, "Get URI for csv file")
     return json.loads(response.text).get('uri', '')
@@ -161,7 +162,7 @@ def save_results(signed_uri: str) -> None:
 
 def main():
     """
-    Main execution flow for querying the Gardin API and downloading results.
+    Main execution flow for querying for data using the Gardin Query Service and downloading results.
     """
     # 1. Get authentication token
     token = get_auth_token()
@@ -192,3 +193,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
